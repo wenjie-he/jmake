@@ -22,13 +22,13 @@ if __name__ == "__main__":
         file_stream = file.read()
     yaml_root = yaml.load(file_stream, yaml.FullLoader)
 
-    depend_lists = []
+    module_info = []
     if not yaml_root.__contains__(module):
-        print("\n".join(str(i) for i in depend_lists))
+        print("\n".join(str(i) for i in module_info))
         sys.exit()
     module_root = yaml_root[module]
-    if not module_root.__contains__(LEAK):
-        print("\n".join(str(i) for i in depend_lists))
+    if not module_root.__contains__(REPO):
+        print("\n".join(str(i) for i in ))
         sys.exit()
     leak_modules = module_root[LEAK]
     for module in leak_modules:
