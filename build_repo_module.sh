@@ -6,13 +6,23 @@ ARC="ar"
 TEMP="/home/lianjin/BUILD_TEMP/"
 OUTPUT="/home/lianjin/BUILD_OUTPUT/"
 
-REPO="single_module/"
-MODULE="example"
-TYPE="exec"
-COPT="-g -fPIC"
-WORKSPACE="example/"
-SRCS="main.cpp"
-HDRS=""
+#REPO="single_module/"
+#MODULE="example"
+#TYPE="exec"
+#COPT="-g -fPIC"
+#DEFINE=""
+#WORKSPACE="example/"
+#SRCS="main.cpp"
+#HDRS=""
+
+REPO=$1
+MODULE=$2
+TYPE=$3
+COPT=$4
+DEFINE=$5
+WORKSPACE=$6
+SRCS=$7
+HDRS=$8
 
 INC=" -I"$WORKSPACE" -I"$OUTPUT"single_module/include/"
 LINK=" -L"$OUTPUT"single_module/lib -ltest"
