@@ -18,7 +18,7 @@ if __name__ == "__main__":
     local_repo_dir = sys.argv[1]
     module = sys.argv[2]
 
-    with open(local_repo_dir + BUILD_YAML, "r", encoding = "utf-8") as file:
+    with open("/home/lianjin/codebase/" + local_repo_dir + BUILD_YAML, "r", encoding = "utf-8") as file:
         file_stream = file.read()
     yaml_root = yaml.load(file_stream, yaml.FullLoader)
 

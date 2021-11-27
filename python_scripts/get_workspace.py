@@ -13,25 +13,25 @@ REPO="REPO"
 BRANCH="BRANCH"
 MODULE="MODULE"
 LEAK="LEAK"
+WORKSPACE="WORKSPACE"
 
 if __name__ == "__main__":
     local_repo_dir = sys.argv[1]
     module = sys.argv[2]
 
-    with open("/home/lianjin/codebase/" + local_repo_dir + BUILD_YAML, "r", encoding = "utf-8") as file:
+    with open(local_repo_dir + BUILD_YAML, "r", encoding = "utf-8") as file:
         file_stream = file.read()
     yaml_root = yaml.load(file_stream, yaml.FullLoader)
 
-    depend_lists = []
+    workspace = ""
     if not yaml_root.__contains__(module):
-        print("\n".join(str(i) for i in depend_lists))
+        print(workspace)
         sys.exit()
     module_root = yaml_root[module]
-    if not module_root.__contains__(LEAK):
-        print("\n".join(str(i) for i in depend_lists))
-        sys.exit()
-    leak_modules = module_root[LEAK]
-    for module in leak_modules:
-        depend_lists.append(local_repo_dir + " "  + module)
 
-    print("\n".join(str(i) for i in depend_lists))
+    if not module_root.__contains__(WORKSPACE) or not isinstance(module_root[WORKSPACE], str):
+        print(workspace)
+        sys.exit()
+    workspace = module_root[WORKSPACE]
+
+    print(workspace)

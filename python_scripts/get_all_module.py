@@ -23,7 +23,7 @@ def GetTargetList(yaml_root):
 
 if __name__ == "__main__":
     yaml_dir = sys.argv[1]
-    yaml_root = ReadBuildYaml(yaml_dir)
+    yaml_root = ReadBuildYaml("/home/lianjin/codebase/" + yaml_dir)
 
     target_list = GetTargetList(yaml_root)
     print(" ".join(str(i) for i in target_list))
