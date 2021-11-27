@@ -241,7 +241,6 @@ function sub_module {
 
     INC_map["$temp_repo_dir"]="exsit "
     echo "after building inc map keys : "${!INC_map[@]}
-    #temp_dep_type=`$PYTHON $jmake_path"/python_scripts/get_module_type.py" $repo $module`
     if [[ "$TYPE" == "static" || "$TYPE" == "shared" ]]; then
     	LINK+=" -L"$OUTPUT$temp_repo_dir"lib/ -l"$module
     fi
