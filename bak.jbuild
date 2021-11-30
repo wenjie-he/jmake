@@ -39,11 +39,12 @@ function build_module {
     THIS_OUTPUT=$OUTPUT$REPO
     THIS_CODEBASE=$CODEBASE$REPO
 
-    INC=""
-    echo "before building inc map keys : "${!INC_map[@]}
-    for key in ${!INC_map[@]}; do
-	INC+=" -I "$key
-    done
+    IFS=$' '
+    INC=$temp_include_path
+    #echo "before building inc map keys : "${!INC_map[@]}
+    #for key in ${!INC_map[@]}; do
+	#INC+=" -I "$key
+    #done
 
     echo "include path : "$INC
 
@@ -53,7 +54,7 @@ function build_module {
     object_list=""
     for s in ${SRCS[@]}; do
         src=$WORKSPACE$s
-        object_file=${THIS_TEMP}${src}".o"
+	object_file=${THIS_TEMP}${src}".o"
         object_list+=" "$object_file
         depend_file=${THIS_TEMP}${src}".d"
 	src_dir=${src%/*}
@@ -168,31 +169,31 @@ function repo_pull {
 }
 
 ############################## sub module  ###############################
-temp_dep_type=""
-link_dirs=""
+totol_include_path=""
+temp_include_path=""
+temp_link_path=""
+
 function sub_module {
     repo=$1
     module=$2
-    
-    if [ -n "${build_done_map[$repo" "$module]}" ]; then
-	echo "repo module has been builded, repo : "$repo", module : "$module
-	return 0
-    fi
+    echo "check sub module, repo : "$repo", module : "$module
+    IFS=$'\n'
 
     depend_list=`$PYTHON $jmake_path"/python_scripts/get_local_depend_list.py" $repo $module`
-    echo "$depend_list" | while read d
-    do
+    for d in ${depend_list[@]};do
 	if [ -z "$d" ]; then
             continue
 	fi
 	repo_dir=`echo $d | awk -F ' ' '{print $1}'`
 	dep_module=`echo $d | awk -F ' ' '{print $2}'`
+	temp_include_path=""
+    	echo "local depend_list, "$repo" "$module" : " $d
 	sub_module $repo_dir $dep_module
     done
 
     depend_list=`$PYTHON $jmake_path"/python_scripts/get_repo_depend_list.py" $repo $module`
-    echo "$depend_list" | while read d
-    do
+    echo "repo depend_list, "$repo" "$module" : " $depend_list
+    for d in ${depend_list[@]};do
 	if [ -z "$d" ]; then
 	    continue
 	fi
@@ -201,19 +202,15 @@ function sub_module {
 	branch=`echo $d | awk -F " " '{print $2}'`
 	dep_module=`echo $d | awk -F " " '{print $3}'`
 	repo_pull "$repo_url" "$branch"
+	temp_include_path=""
 	sub_module $temp_repo_dir $dep_module
     done
 
-    OLD_IFS=$IFS
-    IFS=$'\n'
     module_info="`$PYTHON $jmake_path"/python_scripts/get_module_info.py" $repo $module`"
-    #echo "module_info : "$module_info
     HDRS=""
     for m in ${module_info[@]};do
     	key=`echo $m | sed 's/--\(.*\)="\(.*\)"/\1/g'`
-	#echo "key : "$key
     	value=`echo $m | sed 's/--\(.*\)="\(.*\)"/\2/g'`
-	#echo "value : ""$value"
 	if [ "$key" == "WORKSPACE" ]; then
             WORKSPACE=$value
 	elif [ "$key" == "TYPE" ]; then
@@ -231,25 +228,23 @@ function sub_module {
 	    return 1
 	fi
     done
-    IFS=$OLD_IFS
     REPO=$repo
-    #echo "show build done map : "${build_done_map[$repo" "$module]}
     
-    echo "building module, repo : "$repo", module : "$module
     build_module
     build_done_map[$repo" "$module]="done"
 
-    INC_map["$temp_repo_dir"]="exsit "
-    echo "after building inc map keys : "${!INC_map[@]}
     if [[ "$TYPE" == "static" || "$TYPE" == "shared" ]]; then
     	LINK+=" -L"$OUTPUT$temp_repo_dir"lib/ -l"$module
     fi
+    temp_include_path+=" -I "$OUTPUT$repo"include/"
+    #echo "add temp include path : "" -I "$OUTPUT$repo
     return 0
 }
 
 
 #################################### main entry ########################################
 
+OLD_IFS=$IFS
 local_dir=`echo $repo_url | awk -F ':' '{print $2}'| awk -F ".git" '{print $1}'`"/"
 temp_repo_dir=$local_dir
 module_list=()
@@ -266,3 +261,4 @@ fi
 for m in ${module_list[@]}; do
     sub_module $local_dir  $m
 done
+IFS=$OLD_IFS
