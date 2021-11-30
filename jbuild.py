@@ -37,7 +37,7 @@ list_recurse_sub_module = []
 #############################################################################################################
 def build_module(module, srcs, workspace, copt, tar_type, repo, inc, link, depend_repo_list, headers):
     # copy header
-    print("building module, repo : ", repo, ", module : ", module)
+    print("building module, repo : ", repo, ", module : ", module, ", depend : ", depend_repo_list)
     workspace += "/"
     for h in headers:
         tar_header_file = GLOBAL_OUTPUT + repo + "/include/" + h
