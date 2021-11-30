@@ -291,7 +291,7 @@ def sub_module(repo_url, branch, module_list):
             if os.path.isdir(s):
                 print("invalid src : ", s, ", is a directory")
                 return -1
-            ls_cmd = "cd " + workspace + "&& ls " + s
+            ls_cmd = "cd " + CODEBASE + rela_repo_dir + workspace + "&& ls " + s
             ls_fd = os.popen(ls_cmd)
             ls_srcs = ls_fd.read().replace('\n', ' ').strip()
             ls_srcs_list = ls_srcs.split()
@@ -301,6 +301,28 @@ def sub_module(repo_url, branch, module_list):
             if cmd_ret != None:
                 print("fail to call cmd : ", ls_cmd)
                 return -1
+        
+        headers = []
+        hdr_list = []
+        if module_root.__contains__(HDRS):
+            if not isinstance(module_root[HDRS], list):
+                print("module : ", b, " HDRS not list")
+                return -1;
+            headers = module_root[HDRS]
+            for h in headers:
+                if os.path.isdir(h):
+                    print("invalid src : ", h, ", is a directory")
+                    return -1
+                ls_cmd = "cd " + CODEBASE + rela_repo_dir + workspace + "&& ls " + h
+                ls_fd = os.popen(ls_cmd)
+                ls_hdrs = ls_fd.read().replace('\n', ' ').strip()
+                ls_hdrs_list = ls_hdrs.split()
+                hdr_list += ls_hdrs_list
+                print("hdr_list : ", ls_hdrs)
+                cmd_ret = ls_fd.close()
+                if cmd_ret != None:
+                    print("fail to call cmd : ", ls_cmd)
+                    return -1
 
 
         if not module_root.__contains__(COPT):
@@ -336,13 +358,7 @@ def sub_module(repo_url, branch, module_list):
                 return -1
             link = module_root[LINK]
 
-        headers = []
-        if module_root.__contains__(HDRS):
-            if not isinstance(module_root[HDRS], list):
-                print("module : ", b, " HDRS not list")
-                return -1;
-            headers = module_root[HDRS]
-
+        
         if module_root.__contains__(DEPS):
             if not isinstance(module_root[DEPS], list):
                 print("module : ", b, " illegal DEPS info, not list")
@@ -411,7 +427,7 @@ def sub_module(repo_url, branch, module_list):
         if (rela_repo_dir, b) in map_module_depend:
             depend_repos = map_module_depend[(rela_repo_dir, b)]
         if (rela_repo_dir, b) not in list_build_done:
-            build_module(b, src_list, workspace, copt, tar_type, rela_repo_dir, inc, link, depend_repos, headers)
+            build_module(b, src_list, workspace, copt, tar_type, rela_repo_dir, inc, link, depend_repos, hdr_list)
         if len(stack_sub_module) >= 1:
             stack_sub_module.pop()
         list_recurse_sub_module.append((repo_url, b))
