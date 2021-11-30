@@ -31,6 +31,9 @@ CXX="g++"
 #############################################################################################################
 map_module_depend = {}
 list_build_done = []
+map_repo_branch = {}
+stack_sub_module = []
+list_recurse_sub_module = []
 #############################################################################################################
 def build_module(module, srcs, workspace, copt, tar_type, repo, inc, link, depend_repo_list, headers):
     # copy header
@@ -160,7 +163,7 @@ def build_module(module, srcs, workspace, copt, tar_type, repo, inc, link, depen
         else:
             print("unrecoginzed tar type : ", tar_type)
             return -1
-        if not os.path.isdir(target):
+        if not os.path.isfile(target):
             module_target_changed = True
 
         if module_target_changed:
@@ -221,6 +224,9 @@ def pull_repo(repo_url, branch):
 #############################################################################################################
 
 def sub_module(repo_url, branch, module_list):
+    if repo_url in map_repo_branch and map_repo_branch[repo_url] != branch:
+        print(repo_url, "has more branches, ", map_repo_branch, " and ", branch)
+        return -1
     re_repo_dir = re.findall(r"git@code.devops.xiaohongshu.com:(.+?).git", repo_url)
     if len(re_repo_dir) == 0:
         print("fail to reg repo url : ", repo_url)
@@ -251,6 +257,12 @@ def sub_module(repo_url, branch, module_list):
         build_list = yaml_root[BUILD_TARGET]
     
     for b in build_list:
+        if (repo_url, b) in stack_sub_module:
+            print("loop depend stack : ", stack_sub_module)
+            return -1;
+        if (repo_url, b) in list_recurse_sub_module:
+            continue;
+        stack_sub_module.append((repo_url, b))
         if not isinstance(b, str):
             print("build target : ", b, " in build list must be a str, rather : ", type(b))
             return -1
@@ -259,6 +271,13 @@ def sub_module(repo_url, branch, module_list):
             return -1
         module_root = yaml_root[b]
         
+        workspace = ""
+        if module_root.__contains__(WORKSPACE):
+            if not isinstance(module_root[WORKSPACE], str):
+                print("module : ", b, " WORKSPACE not str")
+                return -1
+            workspace = module_root[WORKSPACE]
+
         # read srcs copt defs type 
         if not module_root.__contains__(SRCS):
             print("module : ", b, " has not SRCS")
@@ -267,6 +286,22 @@ def sub_module(repo_url, branch, module_list):
             print("module : ", b, " SRCS not list")
             return -1;
         srcs = module_root[SRCS]
+        src_list=[]
+        for s in srcs:
+            if os.path.isdir(s):
+                print("invalid src : ", s, ", is a directory")
+                return -1
+            ls_cmd = "cd " + workspace + "&& ls " + s
+            ls_fd = os.popen(ls_cmd)
+            ls_srcs = ls_fd.read().replace('\n', ' ').strip()
+            ls_srcs_list = ls_srcs.split()
+            src_list += ls_srcs_list
+            print("src_list : ", ls_srcs)
+            cmd_ret = ls_fd.close()
+            if cmd_ret != None:
+                print("fail to call cmd : ", ls_cmd)
+                return -1
+
 
         if not module_root.__contains__(COPT):
             print("module : ", b, " has not COPT")
@@ -284,13 +319,7 @@ def sub_module(repo_url, branch, module_list):
             return -1;
         tar_type = module_root[TYPE]
 
-        workspace = ""
-        if module_root.__contains__(WORKSPACE):
-            if not isinstance(module_root[WORKSPACE], str):
-                print("module : ", b, " WORKSPACE not str")
-                return -1
-            workspace = module_root[WORKSPACE]
-
+        
         # include dir
 
         inc = "-I " + sub_repo_dir + "/" + workspace
@@ -382,7 +411,10 @@ def sub_module(repo_url, branch, module_list):
         if (rela_repo_dir, b) in map_module_depend:
             depend_repos = map_module_depend[(rela_repo_dir, b)]
         if (rela_repo_dir, b) not in list_build_done:
-            build_module(b, srcs, workspace, copt, tar_type, rela_repo_dir, inc, link, depend_repos, headers)
+            build_module(b, src_list, workspace, copt, tar_type, rela_repo_dir, inc, link, depend_repos, headers)
+        if len(stack_sub_module) >= 1:
+            stack_sub_module.pop()
+        list_recurse_sub_module.append((repo_url, b))
     return (0, rela_repo_dir)
 
 #############################################################################################################
