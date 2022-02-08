@@ -7,9 +7,9 @@ import os
 import sys
 import multiprocessing
 
-CODEBASE="/home/lianjin/codebase/"
-GLOBAL_OUTPUT="/home/lianjin/BUILD_OUTPUT/"
-GLOBAL_TEMP="/home/lianjin/BUILD_TEMP/"
+CODEBASE="/home/wenjiehe/codebase/"
+GLOBAL_OUTPUT="/home/wenjiehe/BUILD_OUTPUT/"
+GLOBAL_TEMP="/home/wenjiehe/BUILD_TEMP/"
 
 BUILD_YAML="BUILD.yaml"
 BUILD_TARGET="BUILD_TARGET"
@@ -31,7 +31,7 @@ ARC="ar"
 CXX="g++"
 
 #############################################################################################################
-protobuf_url = "git@code.devops.xiaohongshu.com:lianjin/protobuf.git"
+protobuf_url = "github.com/wenjiehe/protobuf.git"
 map_module_depend = {}
 list_build_done = []
 map_repo_branch = {}
@@ -253,7 +253,7 @@ def build_module(module, srcs, workspace, copt, tar_type, repo, inc, link, depen
 
 #############################################################################################################
 def pull_repo(repo_url, branch):
-    re_repo_dir = re.findall(r"git@code.devops.xiaohongshu.com:(.+?).git", repo_url)
+    re_repo_dir = re.findall(r"github.com:(.+?).git", repo_url)
     if len(re_repo_dir) == 0:
         print("fail to reg repo url : ", repo_url)
         return -1;
@@ -300,7 +300,7 @@ def sub_module(repo_url, branch, module_list):
     if repo_url in map_repo_branch and map_repo_branch[repo_url] != branch:
         print(repo_url, "has more branches, ", map_repo_branch, " and ", branch)
         return (-1, "")
-    re_repo_dir = re.findall(r"git@code.devops.xiaohongshu.com:(.+?).git", repo_url)
+    re_repo_dir = re.findall(r"github.com/:(.+?).git", repo_url)
     if len(re_repo_dir) == 0:
         print("fail to reg repo url : ", repo_url)
         return (-1, "")
